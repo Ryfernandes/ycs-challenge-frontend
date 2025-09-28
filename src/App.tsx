@@ -9,7 +9,7 @@ import Modal from './components/Modal';
 import ColorBlock from './components/ColorBlock';
 import LeaderboardCell from './components/LeaderboardCell';
 
-const socket = io('http://localhost:3001');
+const socket = io('https://ycs-challenge-backend.onrender.com/');
 
 function App() {
   const exampleChallenges: Record<string, Challenge> = {
@@ -36,20 +36,29 @@ function App() {
   const [selectedChallenge, setSelectedChallenge] = useState<string>("");
 
   useEffect(() => {
-    let currTeams: Record<string, Team> = teamNames;
+    const updateScores = () => {
+      console.log('Updating scores');
+      let currTeams: Record<string, Team> = teamNames;
 
-    Object.values(currTeams).forEach((team: Team) => {
-      currTeams[team.id].points = 0;
-    });
+      Object.values(currTeams).forEach((team: Team) => {
+        currTeams[team.id].points = 0;
+      });
 
-    Object.values(challenges).forEach((challenge: Challenge) => {
-      if (challenge.completed_by) {
-        currTeams[challenge.completed_by].points += challenge.points;
-      }
-    });
+      Object.values(challenges).forEach((challenge: Challenge) => {
+        if (challenge.completed_by && challenge.completed_by in currTeams) {
+          currTeams[challenge.completed_by].points += challenge.points;
+        }
+      });
 
-    setTeamNames(currTeams);
-    setTeamsList(Object.values(currTeams).sort((a, b) => b.points - a.points));
+      setTeamNames(currTeams);
+      setTeamsList(Object.values(currTeams).sort((a, b) => b.points - a.points));
+    }
+
+    const timeout = setTimeout(() => {
+      updateScores();
+    }, 1000);
+
+    return () => clearTimeout(timeout);
   }, [challenges]);
 
   useEffect(() => {
@@ -66,7 +75,7 @@ function App() {
     async function fetchChallenges() {
       try {
         console.log('Fetching');
-        const res = await axios.get('http://localhost:3001/challenges');
+        const res = await axios.get('https://ycs-challenge-backend.onrender.com/challenges');
         const challengeMap: Record<string, Challenge> = {};
         res.data.forEach((challenge: Challenge) => {
           challengeMap[challenge.id] = challenge;
@@ -80,11 +89,12 @@ function App() {
     async function fetchTeams() {
       try {
         console.log('Fetching');
-        const res = await axios.get('http://localhost:3001/teams');
+        const res = await axios.get('https://ycs-challenge-backend.onrender.com/teams');
         const teamMap: Record<string, Team> = {};
         res.data.forEach((team: Team) => {
-          teamMap[team.id] = team;
+          teamMap[team.id] = {...team, 'points': 0};
         });
+        console.log('Team Map:', teamMap);
         setTeamNames(teamMap);
         setTeamsList(Object.values(teamMap).sort((a, b) => b.points - a.points));
       } catch (err) {
@@ -93,7 +103,9 @@ function App() {
     }
 
     fetchTeams();
+    console.log('Done fetching teams');
     fetchChallenges();
+    console.log('Done fetching challenges');
   }, []);
 
   useEffect(() => {
