@@ -1,0 +1,20 @@
+.cell {
+  display: flex;
+  justify-content: space-between;
+  background-color: rgba(124, 124, 124, 0.219);
+  padding: 0.75rem 2rem;
+  border-radius: 10px;
+  border-left: solid 4px rgb(124, 124, 124);
+  transition: all;
+  transition-duration: 300ms;
+}
+
+.cell:hover {
+  translate: 0px -2px;
+  box-shadow: inset 30px 30px 120px rgba(255, 255, 255, 0.05);
+}
+
+.cell-name {
+  color: rgb(238, 238, 238);
+  font-weight: 550;
+}

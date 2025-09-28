@@ -1,0 +1,20 @@
+.navbar {
+  position: fixed;
+  top: 0%;
+  left: 0%;
+  height: 5.5vh;
+  width: 100vw;
+  padding: 3.5vh 2.5rem;
+  background-color: rgb(0, 0, 0);
+  display: flex;
+  justify-content: space-between;
+  z-index: 9999;
+}
+
+.ycs-logo {
+  height: 100%;
+}
+
+.logo-container {
+  cursor: pointer;
+}
