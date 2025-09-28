@@ -1,6 +1,5 @@
 import './App.css';
 import { useEffect, useState } from 'react';
-import io from 'socket.io-client';
 import axios from 'axios';
 
 import type { Challenge, Team } from './utils/types';
@@ -9,7 +8,6 @@ import Modal from './components/Modal';
 import ColorBlock from './components/ColorBlock';
 import LeaderboardCell from './components/LeaderboardCell';
 
-const socket = io('https://ycs-challenge-backend.onrender.com/');
 
 function App() {
   /*const exampleChallenges: Record<string, Challenge> = {
@@ -32,34 +30,11 @@ function App() {
   const [challenges, setChallenges] = useState<Record<string, Challenge>>({});
   const [teamNames, setTeamNames] = useState<Record<string, Team>>({});
   const [teamsList, setTeamsList] = useState<Team[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const backend_base = import.meta.env.VITE_BACKEND_BASE;
 
   const [selectedChallenge, setSelectedChallenge] = useState<string>("");
-
-  useEffect(() => {
-    const updateScores = () => {
-      console.log('Updating scores');
-      let currTeams: Record<string, Team> = teamNames;
-
-      Object.values(currTeams).forEach((team: Team) => {
-        currTeams[team.id].points = 0;
-      });
-
-      Object.values(challenges).forEach((challenge: Challenge) => {
-        if (challenge.completed_by && challenge.completed_by in currTeams) {
-          currTeams[challenge.completed_by].points += challenge.points;
-        }
-      });
-
-      setTeamNames(currTeams);
-      setTeamsList(Object.values(currTeams).sort((a, b) => b.points - a.points));
-    }
-
-    const timeout = setTimeout(() => {
-      updateScores();
-    }, 1000);
-
-    return () => clearTimeout(timeout);
-  }, [challenges]);
 
   useEffect(() => {
     if (selectedChallenge) {
@@ -72,75 +47,38 @@ function App() {
   }, [selectedChallenge]);
 
   useEffect(() => {
-    async function fetchChallenges() {
+    async function fetchData() {      
       try {
+        setLoading(true);
+
         console.log('Fetching');
-        const res = await axios.get('https://ycs-challenge-backend.onrender.com/challenges');
+        const challenge_res = await axios.get(`${backend_base}/challenges`);
         const challengeMap: Record<string, Challenge> = {};
-        res.data.forEach((challenge: Challenge) => {
+        challenge_res.data.forEach((challenge: Challenge) => {
           challengeMap[challenge.id] = challenge;
         });
-        setChallenges(challengeMap);
-      } catch (err) {
-        console.error('Failed to fetch challenges', err);
-      }
-    }
-
-    async function fetchTeams() {
-      try {
-        console.log('Fetching');
-        const res = await axios.get('https://ycs-challenge-backend.onrender.com/teams');
+        const teams_res = await axios.get(`${backend_base}/teams`);
         const teamMap: Record<string, Team> = {};
-        res.data.forEach((team: Team) => {
+        teams_res.data.forEach((team: Team) => {
           teamMap[team.id] = {...team, 'points': 0};
         });
-        console.log('Team Map:', teamMap);
+        Object.values(challengeMap).forEach((challenge: Challenge) => {
+          if (challenge.completed_by && challenge.completed_by in teamMap) {
+            teamMap[challenge.completed_by].points += challenge.points;
+          }
+        })
+        setChallenges(challengeMap);
         setTeamNames(teamMap);
         setTeamsList(Object.values(teamMap).sort((a, b) => b.points - a.points));
+
+        setLoading(false);
       } catch (err) {
-        console.error('Failed to fetch teams', err);
+        console.error('Failed to fetch data', err);
+        setLoading(false);
       }
     }
 
-    fetchTeams();
-    console.log('Done fetching teams');
-    fetchChallenges();
-    console.log('Done fetching challenges');
-  }, []);
-
-  useEffect(() => {
-    socket.on('challenge-update', ({type, challenge}) => {
-      setChallenges((prev) => {
-        const updated = { ...prev };
-
-        if (type === 'INSERT' || type === 'UPDATE') {
-          updated[challenge.id] = challenge;
-        } else if (type === 'DELETE') {
-          delete updated[challenge.id];
-        }
-
-        return updated;
-      });
-    });
-
-    socket.on('team-update', ({type, team}) => {
-      setTeamNames((prev) => {
-        const updated = { ...prev };
-
-        if (type === 'INSERT' || type === 'UPDATE') {
-          updated[team.id] = team;
-        } else if (type === 'DELETE') {
-          delete updated[team.id];
-        }
-
-        return updated;
-      });
-    });
-
-    return () => {
-      socket.off('challenge-update');
-      socket.off('team-update');
-    };
+    fetchData();
   }, []);
 
   const sortedChallenges = Object.values(challenges).sort((a, b) => a.points - b.points);
@@ -172,40 +110,48 @@ function App() {
         group's first meeting. May the odds be ever in your favor!
       </p>
 
-      <h1 className="font-dm-sans main-sub-title" >Leaderboard</h1>
-      <div className="leaderboard-container">
-        {teamsList.map((team) => (
-          <LeaderboardCell
-            team={team}
-          />
-        ))}
-      </div>
-
-      <h1 className="font-dm-sans main-sub-title" >Tasks</h1>
-      <div className='boxes-container'>
-        {sortedChallenges.map((challenge) => (
-          <ColorBlock
-            id={challenge.id}
-            title={challenge.title}
-            desc={challenge.description}
-            available={challenge.completed_by == null}
-            points={challenge.points}
-            open={openModal}
-            color={challenge.color}
-          />
-        ))}
-      </div>
-
-      {selectedChallenge ? (
-        <div>
-          <Modal
-            challenge={challenges[selectedChallenge]}
-            close={closeModal}
-            teams={teamNames}
-          />
+      {loading ? (
+        <div className="spinner-container">
+          <div className="spinner"></div>
         </div>
       ) : (
-        <></>
+        <>
+          <h1 className="font-dm-sans main-sub-title" >Leaderboard</h1>
+          <div className="leaderboard-container">
+            {teamsList.map((team) => (
+              <LeaderboardCell
+                team={team}
+              />
+            ))}
+          </div>
+
+          <h1 className="font-dm-sans main-sub-title" >Tasks</h1>
+          <div className='boxes-container'>
+            {sortedChallenges.map((challenge) => (
+              <ColorBlock
+                id={challenge.id}
+                title={challenge.title}
+                desc={challenge.description}
+                available={challenge.completed_by == null}
+                points={challenge.points}
+                open={openModal}
+                color={challenge.color}
+              />
+            ))}
+          </div>
+
+          {selectedChallenge ? (
+            <div>
+              <Modal
+                challenge={challenges[selectedChallenge]}
+                close={closeModal}
+                teams={teamNames}
+              />
+            </div>
+          ) : (
+            <></>
+          )}
+        </>
       )}
     </>
   )
