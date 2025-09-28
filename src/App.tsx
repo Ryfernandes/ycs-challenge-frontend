@@ -12,7 +12,7 @@ import LeaderboardCell from './components/LeaderboardCell';
 const socket = io('https://ycs-challenge-backend.onrender.com/');
 
 function App() {
-  const exampleChallenges: Record<string, Challenge> = {
+  /*const exampleChallenges: Record<string, Challenge> = {
     '1': {'color': 'pink', 'id': 1, 'title': 'Eat a Watermelon', 'description': "That's it. Just eat a complete watermelon as a team. Bring us the empty rind to complete this challenge. And here is some empty text that is going to overflow the screen eventually so I can work on putting this onto two lines", 'points': 10, 'completed_by': null, 'updated_at': '2025-09-27 21:57:56.467494'},
     '2': {'color': 'green', 'id': 2, 'title': 'High Five Squared!', 'description': "High five five strangers in a row. You must high five all five strangers within five seconds and record the attempt in order for it to count.", 'points': 1000, 'completed_by': '1', 'updated_at': '2025-09-27 21:57:56.467494'},
     '3': {'color': 'pink', 'id': 3, 'title': 'Eat a Watermelon', 'description': "That's it. Just eat a complete watermelon as a team. Bring us the empty rind to complete this challenge.", 'points': 10, 'completed_by': '1', 'updated_at': '2025-09-27 21:57:56.467494'},
@@ -27,7 +27,7 @@ function App() {
     '1': {'id': 1, 'name': 'CourseTable', 'points': 0},
     '2': {'id': 2, 'name': 'y/labs', 'points': 0},
     '3': {'id': 3, 'name': 'Catalyst 1', 'points': 0}
-  }
+  }*/
 
   const [challenges, setChallenges] = useState<Record<string, Challenge>>({});
   const [teamNames, setTeamNames] = useState<Record<string, Team>>({});
