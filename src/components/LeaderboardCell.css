@@ -7,6 +7,7 @@
   border-left: solid 4px rgb(124, 124, 124);
   transition: all;
   transition-duration: 300ms;
+  gap: 20px;
 }
 
 .cell:hover {

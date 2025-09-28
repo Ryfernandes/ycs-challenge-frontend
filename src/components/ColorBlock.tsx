@@ -23,7 +23,7 @@ function ColorBlock ({ id, title, desc, available, points, open, color }: Props)
             <div className='block-title font-dm-sans'>{title}</div>
             <div className='block-subtitle font-dm-sans'>({available ? 'available' : 'completed'})</div>
           </div>
-          <div className='points-title font-dm-sans'>+{points} pts</div>
+          <div className='points-title font-dm-sans'>{points > 0 ? '+' : ''}{points} pts</div>
         </div>
         <div className='block-desc font-dm-sans'>{desc}</div>
       </div>

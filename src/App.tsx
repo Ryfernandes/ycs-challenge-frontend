@@ -81,7 +81,7 @@ function App() {
     fetchData();
   }, []);
 
-  const sortedChallenges = Object.values(challenges).sort((a, b) => a.points - b.points);
+  const sortedChallenges = Object.values(challenges).sort((a, b) => a.id - b.id);
 
   const openModal = (id: number) => {
     setSelectedChallenge(id.toString());
